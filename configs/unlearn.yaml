@@ -7,8 +7,8 @@ common:
   gradient_checkpointing: true
   per_device_batch_size: 4
   grad_accum: 4
-  epochs: 5
-  lr: 1.0e-5
+  epochs: 10          # was 5 — too gentle; fp16 forget barely dropped
+  lr: 5.0e-5          # was 1e-5 — needed to actually induce forgetting
   warmup_ratio: 0.05
   weight_decay: 0.0
   seed: 42
