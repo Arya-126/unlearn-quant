@@ -24,12 +24,12 @@ def quantize_and_load(model_dir, spec, calib, work_dir, device="cuda"):
     out_dir = os.path.join(work_dir, f"awq_{bits}bit")
     os.makedirs(out_dir, exist_ok=True)
 
-    tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+    tok = AutoTokenizer.from_pretrained(model_dir)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
 
     if not os.path.exists(os.path.join(out_dir, "config.json")):
-        model = AutoAWQForCausalLM.from_pretrained(model_dir, trust_remote_code=True)
+        model = AutoAWQForCausalLM.from_pretrained(model_dir)
         quant_config = {"w_bit": bits, "q_group_size": group_size, "zero_point": True, "version": "GEMM"}
         calib_texts = [build_full(ex.question, ex.answer) for ex in (calib or [])[: spec.get("n_samples", 512)]]
         if len(calib_texts) < 16:
@@ -38,5 +38,5 @@ def quantize_and_load(model_dir, spec, calib, work_dir, device="cuda"):
         model.save_quantized(out_dir)
         tok.save_pretrained(out_dir)
 
-    model = AutoModelForCausalLM.from_pretrained(out_dir, device_map={"": 0}, trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(out_dir, device_map={"": 0})
     return model, tok

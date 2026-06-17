@@ -99,11 +99,9 @@ def run(
 
     # --- base (pre-unlearning) forget score: the "knows it" reference ---
     base_model = __import__("transformers").AutoModelForCausalLM.from_pretrained(
-        base_name, torch_dtype=torch.float16, cache_dir=cache_dir, trust_remote_code=True
-    ).to(device)
+        base_name, torch_dtype=torch.float16, cache_dir=cache_dir    ).to(device)
     base_tok = __import__("transformers").AutoTokenizer.from_pretrained(
-        base_name, cache_dir=cache_dir, trust_remote_code=True
-    )
+        base_name, cache_dir=cache_dir    )
     if base_tok.pad_token is None:
         base_tok.pad_token = base_tok.eos_token
     base_metrics = _eval_dir_or_scorer(

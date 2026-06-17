@@ -37,8 +37,7 @@ class UnlearnConfig:
 
 def _load_model(name, dtype, cache_dir, gradient_checkpointing):
     model = AutoModelForCausalLM.from_pretrained(
-        name, torch_dtype=dtype, cache_dir=cache_dir, trust_remote_code=True
-    )
+        name, torch_dtype=dtype, cache_dir=cache_dir    )
     if gradient_checkpointing:
         model.gradient_checkpointing_enable()
         model.config.use_cache = False

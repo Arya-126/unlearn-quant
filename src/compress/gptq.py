@@ -32,17 +32,17 @@ def quantize_and_load(model_dir, spec, calib, work_dir, device="cuda"):
 
     if not os.path.exists(os.path.join(out_dir, "config.json")):
         qcfg = QuantizeConfig(bits=bits, group_size=group_size)
-        model = GPTQModel.load(model_dir, qcfg, trust_remote_code=True)
+        model = GPTQModel.load(model_dir, qcfg)
         texts = _calib_texts(calib, spec.get("n_samples", 512))
         if len(texts) < 16:
             raise RuntimeError("GPTQ needs calibration text from the retain split (got <16).")
         model.quantize(texts)
         model.save(out_dir)
         # tokenizer copied alongside for downstream loading
-        AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True).save_pretrained(out_dir)
+        AutoTokenizer.from_pretrained(model_dir).save_pretrained(out_dir)
 
-    model = AutoModelForCausalLM.from_pretrained(out_dir, device_map={"": 0}, trust_remote_code=True)
-    tok = AutoTokenizer.from_pretrained(out_dir, trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(out_dir, device_map={"": 0})
+    tok = AutoTokenizer.from_pretrained(out_dir)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     return model, tok

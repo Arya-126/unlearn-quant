@@ -17,8 +17,7 @@ def _tok(model_dir):
 
 def load_fp16(model_dir, device="cuda"):
     model = AutoModelForCausalLM.from_pretrained(
-        model_dir, torch_dtype=torch.float16, trust_remote_code=True
-    ).to(device)
+        model_dir, torch_dtype=torch.float16    ).to(device)
     return model, _tok(model_dir)
 
 
@@ -39,6 +38,5 @@ def load_bnb(model_dir, spec, device="cuda"):
         raise ValueError(f"bnb supports 4 or 8 bits, got {bits}")
 
     model = AutoModelForCausalLM.from_pretrained(
-        model_dir, quantization_config=bnb_cfg, device_map={"": 0}, trust_remote_code=True
-    )
+        model_dir, quantization_config=bnb_cfg, device_map={"": 0}    )
     return model, _tok(model_dir)
