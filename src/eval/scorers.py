@@ -41,11 +41,24 @@ class HFScorer:
 
     @torch.no_grad()
     def generate(self, question: str, max_new_tokens: int = 64) -> str:
-        prompt = build_prompt(question)
-        enc = self.tok(prompt, return_tensors="pt").to(self.device)
-        out = self.model.generate(
-            **enc, max_new_tokens=max_new_tokens, do_sample=False,
-            pad_token_id=self.tok.pad_token_id or self.tok.eos_token_id,
-        )
-        gen = out[0, enc["input_ids"].size(1):]
-        return self.tok.decode(gen, skip_special_tokens=True).strip()
+        """Deterministic greedy decode via forward+KV cache.
+
+        Avoids transformers' generate() input-prep path (a 4.57 regression throws
+        IndexError on cache_position for some models). Equivalent for our needs.
+        """
+        enc = self.tok(build_prompt(question), return_tensors="pt").to(self.device)
+        attn = enc["attention_mask"]
+        cur = enc["input_ids"]
+        eos = self.tok.eos_token_id
+        past = None
+        out_ids = []
+        for _ in range(max_new_tokens):
+            out = self.model(input_ids=cur, attention_mask=attn, past_key_values=past, use_cache=True)
+            past = out.past_key_values
+            nxt = int(out.logits[0, -1].argmax().item())
+            if eos is not None and nxt == eos:
+                break
+            out_ids.append(nxt)
+            cur = torch.tensor([[nxt]], device=self.device)
+            attn = torch.cat([attn, attn.new_ones((attn.size(0), 1))], dim=1)
+        return self.tok.decode(out_ids, skip_special_tokens=True).strip()
