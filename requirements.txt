@@ -1,21 +1,28 @@
-# Core
-torch>=2.1
-transformers>=4.44
+# ─────────────────────────────────────────────────────────────────────────────
+# WARNING: do NOT `pip install -r requirements.txt` on Kaggle/Colab.
+# Those images already ship a CUDA build of torch. Reinstalling torch from PyPI
+# pulls a CPU-only wheel (torch==X.Y+cpu) and silently kills GPU support.
+# On Kaggle, install ONLY the missing extras (see notebooks/kaggle_run.ipynb cell 2).
+#
+# This file is for a FRESH LOCAL environment only. Install a CUDA torch yourself
+# first (https://pytorch.org/get-started), then `pip install -r requirements.txt`.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# torch  -> install separately with the correct CUDA wheel; intentionally NOT pinned here.
+transformers>=4.44,<5
 accelerate>=0.33
 datasets>=2.20
 peft>=0.12
 bitsandbytes>=0.43          # NF4 / int8 RTN + 8-bit Adam
 scipy>=1.10                 # KS-test for Forget Quality
-numpy>=1.24
 pandas>=2.0
 pyyaml>=6.0
 rouge_score>=0.1.2
 tqdm>=4.66
-matplotlib>=3.7             # heatmaps / sweep plots
+matplotlib>=3.7
 
-# Edge int4 formats (Phase B). Install lazily in the notebook; a failure of one
-# must not block the others. Versions left loose because Kaggle's CUDA wheels move.
-gptqmodel>=1.0 ; platform_system != "Windows"     # GPTQ 4/3-bit (successor to auto-gptq)
-autoawq>=0.2.6 ; platform_system != "Windows"      # AWQ 4-bit
-# llama-cpp-python provides GGUF k-quant load+eval; built from source or wheel on Kaggle.
-# llama-cpp-python>=0.2.90
+# Edge int4 formats (Phase B) — install lazily AFTER Phase A passes the gate, and
+# always with --no-deps so they cannot upgrade torch/transformers. See the notebook.
+# gptqmodel    (pin to a transformers-4.x compatible release; 7.x needs transformers>=5)
+# autoawq
+# llama-cpp-python
