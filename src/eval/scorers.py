@@ -16,16 +16,17 @@ from ..data.tofu import build_prompt
 
 
 class HFScorer:
-    def __init__(self, model, tokenizer, device="cuda", max_length=256):
+    def __init__(self, model, tokenizer, device="cuda", max_length=256, prompt_fn=None):
         self.model = model
         self.tok = tokenizer
         self.device = device
         self.max_length = max_length
+        self.prompt_fn = prompt_fn or build_prompt   # default: Phi "Question:/Answer:" template
         self.model.eval()
 
     @torch.no_grad()
     def answer_logprob(self, question: str, answer: str):
-        prompt = build_prompt(question)
+        prompt = self.prompt_fn(question)
         full = prompt + answer
         enc = self.tok(full, return_tensors="pt", truncation=True, max_length=self.max_length).to(self.device)
         prompt_len = len(self.tok(prompt, add_special_tokens=True)["input_ids"])
@@ -46,7 +47,7 @@ class HFScorer:
         Avoids transformers' generate() input-prep path (a 4.57 regression throws
         IndexError on cache_position for some models). Equivalent for our needs.
         """
-        enc = self.tok(build_prompt(question), return_tensors="pt").to(self.device)
+        enc = self.tok(self.prompt_fn(question), return_tensors="pt").to(self.device)
         attn = enc["attention_mask"]
         cur = enc["input_ids"]
         eos = self.tok.eos_token_id

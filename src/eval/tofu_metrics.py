@@ -81,17 +81,25 @@ def model_utility(scorer, utility_examples: List[QAExample]) -> float:
     return float((p + r) / 2)
 
 
-def evaluate(scorer, forget, retain, utility=None, forget_metric="rouge") -> dict:
-    """Full metric bundle for one (model, compression) condition."""
+def evaluate(scorer, forget, retain, utility=None, forget_metric="rouge", do_rouge=True) -> dict:
+    """Full metric bundle for one (model, compression) condition.
+
+    do_rouge=False skips greedy generation (used for 7B, where generation is slow/OOM-prone);
+    forget_score then comes from probability. Truth-Ratio / Forget Quality are unaffected.
+    """
     res = {
-        "forget_rouge": rouge_l_recall(scorer, forget),
         "forget_prob": mean_answer_prob(scorer, forget),
-        "retain_rouge": rouge_l_recall(scorer, retain),
         "retain_prob": mean_answer_prob(scorer, retain),
         "forget_quality": forget_quality(scorer, forget, retain),
     }
+    if do_rouge:
+        res["forget_rouge"] = rouge_l_recall(scorer, forget)
+        res["retain_rouge"] = rouge_l_recall(scorer, retain)
     if utility is not None:
-        res["model_utility"] = model_utility(scorer, utility)
+        res["model_utility"] = mean_answer_prob(scorer, utility) if not do_rouge else model_utility(scorer, utility)
     # Headline scalar used by the recovery ratio.
-    res["forget_score"] = res["forget_rouge"] if forget_metric == "rouge" else res["forget_prob"]
+    if forget_metric == "rouge" and do_rouge:
+        res["forget_score"] = res["forget_rouge"]
+    else:
+        res["forget_score"] = res["forget_prob"]
     return res

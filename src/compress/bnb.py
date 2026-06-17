@@ -14,8 +14,12 @@ def _tok(model_dir):
     return load_tokenizer(model_dir)
 
 
-def load_fp16(model_dir, device="cuda"):
-    model = load_causal_lm(model_dir, torch_dtype=torch.float16).to(device)
+def load_fp16(model_dir, device="cuda", device_map=None):
+    # device_map="auto" spreads/offloads big (7B) fp16 weights across GPUs; otherwise .to(device).
+    if device_map is not None:
+        model = load_causal_lm(model_dir, torch_dtype=torch.float16, device_map=device_map)
+    else:
+        model = load_causal_lm(model_dir, torch_dtype=torch.float16).to(device)
     return model, _tok(model_dir)
 
 
