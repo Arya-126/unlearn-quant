@@ -51,11 +51,9 @@ def distill(
     cache_dir: Optional[str] = None,
     device: str = "cuda",
 ):
-    from ..modeling import load_causal_lm
+    from ..modeling import load_causal_lm, load_tokenizer
 
-    tok = AutoTokenizer.from_pretrained(teacher_dir)
-    if tok.pad_token is None:
-        tok.pad_token = tok.eos_token
+    tok = load_tokenizer(teacher_dir, cache_dir=cache_dir)
 
     teacher = load_causal_lm(teacher_dir, torch_dtype=dtype).to(device).eval()
     for p in teacher.parameters():

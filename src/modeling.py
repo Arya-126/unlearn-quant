@@ -10,7 +10,28 @@ from __future__ import annotations
 
 from typing import Optional
 
-from transformers import AutoConfig, AutoModelForCausalLM
+from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+
+# The locuslab/tofu_ft_phi-1.5 repo ships a broken GPT2Tokenizer that encodes text to
+# ZERO tokens under current transformers. Its weights are plain Phi-1.5 (identical vocab),
+# so we fall back to the base tokenizer when the bundled one is broken.
+_FALLBACK_TOKENIZER = "microsoft/phi-1_5"
+_PROBE = "Question: test?\nAnswer: ok"
+
+
+def load_tokenizer(name: str, cache_dir: Optional[str] = None):
+    """Load a tokenizer, falling back to microsoft/phi-1_5 if it encodes to empty."""
+    tok = AutoTokenizer.from_pretrained(name, cache_dir=cache_dir)
+    try:
+        n = len(tok(_PROBE)["input_ids"])
+    except Exception:
+        n = 0
+    if n == 0:
+        print(f"[modeling] tokenizer at {name} encodes empty; falling back to {_FALLBACK_TOKENIZER}")
+        tok = AutoTokenizer.from_pretrained(_FALLBACK_TOKENIZER, cache_dir=cache_dir)
+    if tok.pad_token is None:
+        tok.pad_token = tok.eos_token
+    return tok
 
 
 def load_config(name: str, cache_dir: Optional[str] = None):

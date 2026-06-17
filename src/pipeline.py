@@ -98,11 +98,9 @@ def run(
     unlearned_dir = os.path.join(work, "unlearned")
 
     # --- base (pre-unlearning) forget score: the "knows it" reference ---
-    from .modeling import load_causal_lm
+    from .modeling import load_causal_lm, load_tokenizer
     base_model = load_causal_lm(base_name, cache_dir=cache_dir, torch_dtype=torch.float16).to(device)
-    base_tok = __import__("transformers").AutoTokenizer.from_pretrained(base_name, cache_dir=cache_dir)
-    if base_tok.pad_token is None:
-        base_tok.pad_token = base_tok.eos_token
+    base_tok = load_tokenizer(base_name, cache_dir=cache_dir)
     base_metrics = _eval_dir_or_scorer(
         HFScorer(base_model, base_tok, device), forget_eval, retain_eval, utility_eval, forget_metric
     )

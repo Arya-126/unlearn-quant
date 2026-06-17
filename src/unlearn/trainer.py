@@ -70,9 +70,8 @@ def unlearn(
 ):
     """Run unlearning and save the resulting model + tokenizer to ``out_dir``."""
     torch.manual_seed(cfg.seed)
-    tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir)
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
+    from ..modeling import load_tokenizer
+    tokenizer = load_tokenizer(model_name, cache_dir=cache_dir)
 
     model = _load_model(model_name, dtype, cache_dir, cfg.gradient_checkpointing).to(device)
     model.train()

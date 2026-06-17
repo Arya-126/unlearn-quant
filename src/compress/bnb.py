@@ -7,14 +7,11 @@ from __future__ import annotations
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from ..modeling import load_causal_lm, load_config
+from ..modeling import load_causal_lm, load_config, load_tokenizer
 
 
 def _tok(model_dir):
-    tok = AutoTokenizer.from_pretrained(model_dir)
-    if tok.pad_token is None:
-        tok.pad_token = tok.eos_token
-    return tok
+    return load_tokenizer(model_dir)
 
 
 def load_fp16(model_dir, device="cuda"):
