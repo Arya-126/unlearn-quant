@@ -51,17 +51,17 @@ def distill(
     cache_dir: Optional[str] = None,
     device: str = "cuda",
 ):
-    tok = AutoTokenizer.from_pretrained(teacher_dir, trust_remote_code=True)
+    from ..modeling import load_causal_lm
+
+    tok = AutoTokenizer.from_pretrained(teacher_dir)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
 
-    teacher = AutoModelForCausalLM.from_pretrained(
-        teacher_dir, torch_dtype=dtype    ).to(device).eval()
+    teacher = load_causal_lm(teacher_dir, torch_dtype=dtype).to(device).eval()
     for p in teacher.parameters():
         p.requires_grad_(False)
 
-    student = AutoModelForCausalLM.from_pretrained(
-        student_init, torch_dtype=dtype, cache_dir=cache_dir    ).to(device)
+    student = load_causal_lm(student_init, cache_dir=cache_dir, torch_dtype=dtype).to(device)
     student.gradient_checkpointing_enable()
     student.config.use_cache = False
 

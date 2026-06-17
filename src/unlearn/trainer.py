@@ -36,8 +36,8 @@ class UnlearnConfig:
 
 
 def _load_model(name, dtype, cache_dir, gradient_checkpointing):
-    model = AutoModelForCausalLM.from_pretrained(
-        name, torch_dtype=dtype, cache_dir=cache_dir    )
+    from ..modeling import load_causal_lm
+    model = load_causal_lm(name, cache_dir=cache_dir, torch_dtype=dtype)
     if gradient_checkpointing:
         model.gradient_checkpointing_enable()
         model.config.use_cache = False
@@ -70,7 +70,7 @@ def unlearn(
 ):
     """Run unlearning and save the resulting model + tokenizer to ``out_dir``."""
     torch.manual_seed(cfg.seed)
-    tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, cache_dir=cache_dir)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 

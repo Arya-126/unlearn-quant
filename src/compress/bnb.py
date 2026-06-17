@@ -7,17 +7,18 @@ from __future__ import annotations
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from ..modeling import load_causal_lm, load_config
+
 
 def _tok(model_dir):
-    tok = AutoTokenizer.from_pretrained(model_dir, trust_remote_code=True)
+    tok = AutoTokenizer.from_pretrained(model_dir)
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     return tok
 
 
 def load_fp16(model_dir, device="cuda"):
-    model = AutoModelForCausalLM.from_pretrained(
-        model_dir, torch_dtype=torch.float16    ).to(device)
+    model = load_causal_lm(model_dir, torch_dtype=torch.float16).to(device)
     return model, _tok(model_dir)
 
 
@@ -37,6 +38,8 @@ def load_bnb(model_dir, spec, device="cuda"):
     else:
         raise ValueError(f"bnb supports 4 or 8 bits, got {bits}")
 
+    cfg = load_config(model_dir)
     model = AutoModelForCausalLM.from_pretrained(
-        model_dir, quantization_config=bnb_cfg, device_map={"": 0}    )
+        model_dir, config=cfg, quantization_config=bnb_cfg, device_map={"": 0}
+    )
     return model, _tok(model_dir)
