@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# Run artifacts / caches (regenerated; can be large)
+.work/
+.quant/
+.hf_cache/
+*.gguf
+
+# Results: keep CSV/JSON/plots out of git by default; remove if you want to commit them
+results/*
+!results/.gitkeep
+
+# Env
+.venv/
+venv/
+.env

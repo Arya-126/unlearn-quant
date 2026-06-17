@@ -1,0 +1,18 @@
+# Target model + dataset identifiers.
+# Phi-1.5 is already fine-tuned on TOFU, so it "knows" the forget facts and we
+# go straight to unlearning (no learn step).
+model:
+  name: locuslab/tofu_ft_phi-1.5
+  base_arch: microsoft/phi-1_5      # used by GGUF conversion + distillation student init
+  dtype: bfloat16
+  max_length: 256
+
+data:
+  hf_dataset: locuslab/TOFU
+  forget_split: forget05            # paper headline split (5% = 200 QA over 20 authors)
+  retain_split: retain95            # complement used for utility + GradDiff/NPO retain term
+  utility_splits: [real_authors, world_facts]
+
+paths:
+  cache_dir: ./.hf_cache
+  out_dir: ./results

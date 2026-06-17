@@ -1,0 +1,28 @@
+# Unlearning hyperparameters. Defaults follow the TOFU / FailureLLMUnlearning
+# settings adapted for a single T4 (full-parameter FT, 8-bit Adam, grad ckpt).
+common:
+  full_finetune: true          # keep full-FT for headline runs; the effect rides on
+                               # small dense weight perturbations that LoRA distorts.
+  use_8bit_adam: true
+  gradient_checkpointing: true
+  per_device_batch_size: 4
+  grad_accum: 4
+  epochs: 5
+  lr: 1.0e-5
+  warmup_ratio: 0.05
+  weight_decay: 0.0
+  seed: 42
+
+methods:
+  # GA: pure gradient ascent on forget set (no utility constraint -> weak recovery, control).
+  ga:
+    type: grad_ascent
+  # GradDiff: ascent on forget + descent on retain (utility-constrained -> strong recovery).
+  graddiff:
+    type: grad_diff
+    retain_weight: 1.0
+  # NPO: negative preference optimization (utility-constrained -> strong recovery).
+  npo:
+    type: npo
+    beta: 0.1
+    retain_weight: 1.0          # NPO + retain SFT term

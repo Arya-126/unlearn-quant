@@ -1,0 +1,28 @@
+# Compression sweep. Each entry becomes one evaluated condition.
+# Phase A (replication) uses only the `bnb` family; Phase B adds the rest.
+
+quantization:
+  fp16:        { backend: none }                                   # reference (unlearned, uncompressed)
+  bnb_int8:    { backend: bnb,  bits: 8, nf4: false }              # RTN int8
+  bnb_nf4:     { backend: bnb,  bits: 4, nf4: true,  double_quant: true }  # RTN 4-bit (paper's setting)
+  gptq_4bit:   { backend: gptq, bits: 4, group_size: 128 }         # calibrated
+  gptq_3bit:   { backend: gptq, bits: 3, group_size: 128 }
+  awq_4bit:    { backend: awq,  bits: 4, group_size: 128 }         # activation-aware
+  gguf_q4_k_m: { backend: gguf, ftype: Q4_K_M }                    # llama.cpp k-quant (edge default)
+  gguf_q4_0:   { backend: gguf, ftype: Q4_0 }                      # legacy RTN-style block quant
+  gguf_q3_k_m: { backend: gguf, ftype: Q3_K_M }
+
+calibration:
+  source: retain          # use retain-split text for GPTQ/AWQ calibration (avoids leaking forget)
+  n_samples: 512
+  seq_len: 256
+
+distillation:
+  enabled: true
+  student_init: base_arch     # init student from microsoft/phi-1_5 (random-ish wrt unlearned teacher)
+  data: retain                # distill only on retain set (the "robustifies" recipe)
+  temperature: 2.0
+  alpha_kd: 1.0               # weight on KL(student||teacher) soft targets
+  alpha_ce: 0.0               # optional hard-label CE on retain answers
+  epochs: 3
+  lr: 1.0e-4

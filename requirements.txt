@@ -1,0 +1,21 @@
+# Core
+torch>=2.1
+transformers>=4.44
+accelerate>=0.33
+datasets>=2.20
+peft>=0.12
+bitsandbytes>=0.43          # NF4 / int8 RTN + 8-bit Adam
+scipy>=1.10                 # KS-test for Forget Quality
+numpy>=1.24
+pandas>=2.0
+pyyaml>=6.0
+rouge_score>=0.1.2
+tqdm>=4.66
+matplotlib>=3.7             # heatmaps / sweep plots
+
+# Edge int4 formats (Phase B). Install lazily in the notebook; a failure of one
+# must not block the others. Versions left loose because Kaggle's CUDA wheels move.
+gptqmodel>=1.0 ; platform_system != "Windows"     # GPTQ 4/3-bit (successor to auto-gptq)
+autoawq>=0.2.6 ; platform_system != "Windows"      # AWQ 4-bit
+# llama-cpp-python provides GGUF k-quant load+eval; built from source or wheel on Kaggle.
+# llama-cpp-python>=0.2.90
