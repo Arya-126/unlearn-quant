@@ -48,7 +48,10 @@ def main():
     ap.add_argument("--method", default="npo", choices=list(UNLEARNED))
     ap.add_argument("--n-eval", type=int, default=50)
     ap.add_argument("--out-dir", default="./results")
+    ap.add_argument("--rouge", action="store_true",
+                    help="also measure greedy-generation ROUGE (recovery may show here, not in prob)")
     args = ap.parse_args()
+    forget_metric = "rouge" if args.rouge else "prob"
 
     forget = load_split("forget10", perturbed=True)[: args.n_eval]
     retain = load_split("retain_perturbed", perturbed=True)[: args.n_eval]
@@ -58,7 +61,7 @@ def main():
             model_id, spec, device="cuda", prompt_fn=llama2_prompt,
             fp16_device_map="auto" if spec.get("backend", "none") in ("none", None) else None,
         )
-        m = tofu_metrics.evaluate(scorer, forget, retain, forget_metric="prob", do_rouge=False)
+        m = tofu_metrics.evaluate(scorer, forget, retain, forget_metric=forget_metric, do_rouge=args.rouge)
         del scorer
         _free()
         return m
