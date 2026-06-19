@@ -54,11 +54,30 @@ LoRA); base `open-unlearning/tofu_Llama-2-7b-chat-hf_full`.
   small-denominator artifact.** Quantizing did not bring the knowledge back.
 - **Scale is therefore ruled out** as the explanation for the 1.3B null result.
 
+### Phase B — edge int4 formats @1.3B (Phi-1.5, NPO, forget05, n_eval=40)
+
+base forget ROUGE = 0.811; NPO unlearned fp16 = 0.305.
+
+| condition | forget ROUGE | recovery (ROUGE) | utility |
+|---|---|---|---|
+| fp16 | 0.305 | — | 0.63 |
+| bnb_nf4 (RTN) | 0.323 | 0.035 | 0.66 |
+| gguf_q4_k_m (k-quant) | 0.321 | 0.032 | 0.23\* |
+| gguf_q4_0 (legacy RTN) | 0.319 | 0.028 | 0.18\* |
+
+**Calibrated GGUF k-quants behave like bitsandbytes RTN — no recovery (all ≈0.03).** The project's
+core hypothesis ("realistic edge formats might recover where RTN didn't") is **not supported** at 1.3B.
+
+\*GGUF `forget_prob`/utility are unreliable here — the llama.cpp echo-logprobs scoring path returns
+~1e-8 magnitudes that don't match the HF path (a scorer bug to fix). The **ROUGE/generation** numbers
+are the trustworthy GGUF signal, and they show no recovery. GPTQ/AWQ deferred (their wheels break the
+Kaggle numpy/torch ABI; need isolated runs).
+
 ## Interpretation
 
-Across **two scales (1.3B, 7B)**, **two methods (NPO, GradDiff)**, and **two metrics (prob,
-ROUGE)**, bitsandbytes NF4/int8 quantization of the unlearned model does **not** recover forgotten
-TOFU knowledge. If this holds up, it is a genuine (if less flashy) result with a clear
+Across **two scales (1.3B, 7B)**, **two methods (NPO, GradDiff)**, **two metrics (prob, ROUGE)**,
+and now **three quantizers (bnb RTN, GGUF k-quant, GGUF legacy)**, quantization of the unlearned
+model does **not** recover forgotten TOFU knowledge (recovery ≤0.04 everywhere). If this holds up, it is a genuine (if less flashy) result with a clear
 edge-deployment reading: **NF4-quantizing a well-unlearned small model does not, by itself,
 resurrect the forgotten facts** — contrary to what the large-model RTN result might lead you to
 expect.
@@ -77,7 +96,9 @@ expect.
 
 ## Next steps (cheap → expensive)
 
-- [ ] `FINDINGS.md` ← (this file)
-- [ ] Phase B edge formats (GPTQ/AWQ/GGUF) on the npo_7b checkpoint — download once, quantize/eval.
+- [x] `FINDINGS.md` ← (this file)
+- [x] Phase B GGUF k-quant/legacy @1.3B — no recovery (≈0.03), same as RTN.
+- [ ] Fix GGUF prob-scoring (llama.cpp echo-logprobs magnitude ≠ HF path).
+- [ ] GPTQ/AWQ in isolated, ABI-safe kernels (each its own run; --no-deps; verify `import torch`).
 - [ ] Reproduce with zzwjames's exact unlearning recipe + their quantization, to close threat #1.
 - [ ] More seeds + full eval set; sweep forget-quality (depth of unlearning) vs recovery.
