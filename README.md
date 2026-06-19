@@ -62,6 +62,11 @@ See `configs/` for all knobs. Core code in `src/{data,unlearn,compress,eval}` an
 
 ## Status
 
-- [ ] Phase A replication anchor (bnb)
-- [ ] Phase B edge formats + distillation
-- [ ] Phase C analysis + FINDINGS.md
+- [x] Harness runs end-to-end on Kaggle T4 (`scripts/run_replication.py`, `scripts/run_reproduce.py`)
+- [x] Phase A (bnb) at 1.3B Phi-1.5 — **no NF4 recovery** for NPO; GradDiff collapsed at high lr
+- [x] 7B scale validation (Llama-2-7b, external full-FT checkpoints) — **also no recovery** (rules out scale)
+- [x] Results written up in [FINDINGS.md](FINDINGS.md) — current result is a *non-reproduction*
+- [ ] Phase B edge formats (GPTQ/AWQ/GGUF) + distillation
+- [ ] Close threats to validity: run zzwjames's exact recipe/quantizer; more seeds; deeper forget
+
+See [FINDINGS.md](FINDINGS.md) for the data and threats to validity.
